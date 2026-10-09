@@ -9,6 +9,12 @@
   --red: #ff6b6b;
 }
 
+:root[data-theme="light"] {
+  --bg: #eaeded; --panel: #ffffff; --border: #aab7c4; --text: #17233b; --muted: #5c6675; --blue: #0073bb; --orange: #ff9900; --red: #b12704;
+}
+:root[data-theme="system"] { color-scheme: dark; }
+@media (prefers-color-scheme: light) { :root[data-theme="system"] { --bg: #eaeded; --panel: #ffffff; --border: #aab7c4; --text: #17233b; --muted: #5c6675; --blue: #0073bb; --red: #b12704; } }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Amazon Ember", "Helvetica Neue", Arial, sans-serif; font-size: 16px; -webkit-font-smoothing: antialiased; }
 body { min-width: 1180px; }
@@ -141,6 +147,13 @@ fieldset { border: 0; padding: 0; margin-top: 24px; }
 .detail-title-row h1 { display: flex; align-items: center; gap: 8px; }
 .zone-badge { font-size: 15px; background: #0879d1; border-radius: 4px; padding: 6px 12px; }
 .detail-title-row .outline-btn { margin-left: 0; white-space: nowrap; }
+.zone-action-area { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.export-menu { position: relative; }
+.export-menu summary { list-style: none; }
+.export-menu summary::-webkit-details-marker { display: none; }
+.export-menu-items { position: absolute; z-index: 5; right: 0; top: calc(100% + 6px); min-width: 170px; background: var(--panel); border: 1px solid var(--border); padding: 6px 0; box-shadow: 0 8px 20px rgba(0,0,0,.45); }
+.export-menu-items a { display: block; padding: 9px 14px; white-space: nowrap; }
+.export-menu-items a:hover { background: #1f3349; }
 .zone-detail-card { border-radius: 20px; }
 .section-heading h2 { margin: 0; }
 .detail-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 18px; }
@@ -199,6 +212,26 @@ fieldset { border: 0; padding: 0; margin-top: 24px; }
 .delete-modal em { color: #fff; }
 .modal-footer { display: flex; justify-content: flex-end; align-items: center; gap: 24px; border-top: 1px solid var(--border); margin: 20px -28px -28px; padding: 16px 28px; }
 footer { height: 40px; border-top: 1px solid #46515f; background: #10161f; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; color: #c6ced8; font-size: 13px; }
+.aws-footer-links { display: flex; align-items: center; gap: 18px; }
+.aws-footer-links a { display: inline-flex; align-items: center; gap: 5px; color: #c6ced8; white-space: nowrap; }
+.aws-footer-links a:hover { color: var(--blue); }
+.aws-footer-links img { width: 19px; height: 19px; object-fit: contain; }
+.theme-settings { position: relative; display: inline-flex; }
+.theme-settings-button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; }
+.theme-settings-button .icon { display: inline-block; font-size: 22px; width: 22px; height: 22px; }
+.theme-menu { position: absolute; z-index: 20; top: 32px; right: -20px; width: 290px; padding: 20px 26px; background: var(--panel); border: 1px solid var(--border); color: var(--text); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+.theme-menu h3 { margin: 0 -26px 18px; padding: 0 26px 18px; border-bottom: 1px solid var(--border); font-size: 18px; }
+.theme-menu strong, .theme-menu label { display: block; margin: 12px 0; }
+.theme-menu em { color: var(--muted); font-weight: normal; }
+.import-textarea { min-height: 260px; resize: vertical; }
+.import-preview { min-height: 240px; }
+.import-record-head, .import-record-row { grid-template-columns: 1.4fr .6fr 2fr .8fr; }
+.import-actions { justify-content: flex-end; }
+:root[data-theme="light"] .global-header, :root[data-theme="light"] .crumb-bar, :root[data-theme="light"] footer { background: #232f3e; color: #f2f4f6; }
+:root[data-theme="light"] aside { background: #f3f4f4; }
+:root[data-theme="light"] aside a, :root[data-theme="light"] aside .side-group-toggle, :root[data-theme="light"] .disclosure { color: #17233b; }
+:root[data-theme="light"] p, :root[data-theme="light"] .record-row, :root[data-theme="light"] .zone-row { color: #334e68; }
+:root[data-theme="light"] .field, :root[data-theme="light"] .search-input, :root[data-theme="light"] .record-type-filter select { background: #fff; color: #17233b; }
 .auth-loading { min-height: 100vh; display: grid; place-items: center; color: var(--muted); background: var(--bg); }
 .logout-btn { background: transparent; border: 0; color: var(--blue); cursor: pointer; margin-left: 10px; text-decoration: underline; }
 .login-page { min-height: 100vh; background: #eaeded; color: #161e2d; padding-bottom: 80px; }

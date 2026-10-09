@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,7 @@ from ..database.models import DNSRecord, HostedZone, utc_now
 from ..repositories.dns_record import dns_record_repository
 from ..repositories.hosted_zone import hosted_zone_repository
 from ..schemas.dns_record import DNSRecordCreate, DNSRecordUpdate, RecordType
+from .dns_zone_transfer import import_records
 
 
 class DNSRecordService:
@@ -45,6 +48,10 @@ class DNSRecordService:
         record = self.get(db, zone_id, record_id, user)
         dns_record_repository.delete(db, record)
         self._refresh_count(db, zone_id)
+
+    def import_zone_file(self, db: Session, zone_id: int, zone_file: str, user: str) -> tuple[list[DNSRecord], list[str]]:
+        zone = self.zone(db, zone_id, user)
+        return import_records(db, zone, zone_file)
 
     def _refresh_count(self, db: Session, zone_id: int) -> None:
         zone = db.get(HostedZone, zone_id)

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" role="img" aria-label="Agent Toolkit for AWS">
+  <rect x="1" y="1" width="20" height="20" rx="4" fill="#202a38"/>
+  <rect x="5" y="7" width="12" height="10" rx="1.5" fill="none" stroke="#e7edf5" stroke-width="1.6"/>
+  <path d="M8 7V5.5h6V7M5 10h12" fill="none" stroke="#e7edf5" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

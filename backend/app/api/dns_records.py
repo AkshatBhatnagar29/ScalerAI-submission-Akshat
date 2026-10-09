@@ -1,14 +1,57 @@
 from math import ceil
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from ..core.dependencies import get_current_user
 from ..database.session import get_db
 from ..schemas.dns_record import DNSRecordCreate, DNSRecordListResponse, DNSRecordResponse, DNSRecordUpdate, RecordType
+from pydantic import BaseModel, Field
 from ..services.dns_record import dns_record_service
+from ..services.dns_zone_transfer import parse_zone_file
 
 router = APIRouter(prefix="/api/hosted-zones/{hosted_zone_id}/records", tags=["dns records"])
+
+
+class ZoneFileImport(BaseModel):
+    zone_file: str = Field(min_length=1)
+
+
+class ZoneFileImportResponse(BaseModel):
+    imported_count: int
+    records: list[DNSRecordResponse]
+
+
+class ZoneFilePreviewRecord(BaseModel):
+    name: str
+    type: RecordType
+    ttl: int
+    value: str
+    priority: int | None = None
+    weight: int | None = None
+    port: int | None = None
+    flag: int | None = None
+    tag: str | None = None
+
+
+class ZoneFilePreviewResponse(BaseModel):
+    imported_count: int
+    records: list[ZoneFilePreviewRecord]
+
+
+@router.post("/import/preview", response_model=ZoneFilePreviewResponse)
+def preview_zone_file(hosted_zone_id: int, payload: ZoneFileImport, db: Session = Depends(get_db), user: str = Depends(get_current_user)) -> ZoneFilePreviewResponse:
+    zone = dns_record_service.zone(db, hosted_zone_id, user)
+    parsed = parse_zone_file(payload.zone_file, zone.name)
+    if parsed.errors:
+        raise HTTPException(status_code=422, detail={"message": "Zone file contains invalid records", "errors": parsed.errors})
+    return ZoneFilePreviewResponse(imported_count=len(parsed.records), records=parsed.records)
+
+
+@router.post("/import", response_model=ZoneFileImportResponse, status_code=status.HTTP_201_CREATED)
+def import_zone_file(hosted_zone_id: int, payload: ZoneFileImport, db: Session = Depends(get_db), user: str = Depends(get_current_user)) -> ZoneFileImportResponse:
+    records, _ = dns_record_service.import_zone_file(db, hosted_zone_id, payload.zone_file, user)
+    return ZoneFileImportResponse(imported_count=len(records), records=records)
 
 
 @router.get("", response_model=DNSRecordListResponse)

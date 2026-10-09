@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" role="img" aria-label="Console Mobile App">
+  <rect x="5" y="3" width="9" height="16" rx="1.5" fill="none" stroke="#e7edf5" stroke-width="1.6"/>
+  <path d="M8 6h3M8 16h3M14 8v7m0 0-2.5-2.5M14 15l2.5-2.5" fill="none" stroke="#e7edf5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
