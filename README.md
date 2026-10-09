@@ -1,200 +1,542 @@
-# AWS Route53 Clone
+# AWS Route 53 Clone
 
-This project is a functional Route53 UX clone with mocked authentication, persistent SQLite storage, and a FastAPI backend. It is designed for local development and does not connect to AWS.
+<p align="center">
+  <strong>A full-stack recreation of the AWS Route 53 management console</strong>
+  <br />
+  A modern DNS management interface built with Next.js, TypeScript, FastAPI, and SQLite.
+  <br /><br />
+  <a href="https://scaler-ai-submission-akshat.vercel.app/"><strong>Live Demo</strong></a>
+  &nbsp; · &nbsp;
+  <a href="https://scaler-ai-submission-akshat.vercel.app/"><strong>Try the Application</strong></a>
+</p>
+
+---
+
+## Overview
+
+AWS Route 53 Clone is a full-stack web application that recreates the look, navigation, and core management workflows of the AWS Route 53 console.
+
+The application provides a centralized interface for managing hosted zones and DNS records, with mock authentication, RESTful APIs, relational data persistence, validation, search, filtering, and pagination.
+
+The frontend follows AWS console design conventions, including its navigation hierarchy, sidebar, breadcrumbs, data tables, forms, notifications, and resource-management workflows. The backend separates API endpoints, business logic, database access, and data validation to maintain a clean and extensible architecture.
+
+**Live application:** [https://scaler-ai-submission-akshat.vercel.app/](https://scaler-ai-submission-akshat.vercel.app/)
 
 ## Features
 
-- Mock login, logout, HTTP-only session cookie, protected routes, and session persistence while the backend is running
-- Hosted Zone view, search, create, edit, delete, pagination, record counts, and SQLite persistence
-- DNS Record view, search, type filters, pagination, create, edit, delete, confirmation dialogs, and notifications
-- Supported record types: A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, and CAA
-- AWS-style Route53 navigation, header, sidebar, breadcrumbs, tables, forms, loading, empty, and error states
-- Placeholder pages for Dashboard, Traffic Policies, Health Checks, Resolver, and Profiles
+### Authentication and sessions
+- Mock login and logout workflows.
+- HTTP-only session cookies.
+- Protected application routes and authentication checks.
+- Session persistence while the backend process remains running.
+- Configurable credentials and cookie security settings.
 
-Optional bonus features such as BIND import, export, dark mode, keyboard shortcuts, and bulk operations are not implemented.
+### Hosted Zone management
+- Create, view, edit, and delete hosted zones.
+- Support for public and private hosted zone configurations.
+- Hosted zone descriptions and generated Route 53-style identifiers.
+- Search hosted zones by relevant attributes.
+- Paginated resource listings.
+- DNS record counts associated with hosted zones.
+- Persistent storage through SQLite and SQLAlchemy.
+- Ownership checks for protected resource operations.
 
-## Tech stack
+### DNS record management
+Manage DNS records within individual hosted zones through dedicated resource views and forms.
 
-- Frontend: Next.js 14, React, TypeScript
-- Backend: FastAPI, Python
-- Database: SQLite and SQLAlchemy
+Supported record types:
+
+| Record type | Purpose |
+|---|---|
+| A | Maps a hostname to an IPv4 address |
+| AAAA | Maps a hostname to an IPv6 address |
+| CNAME | Creates a canonical name alias |
+| TXT | Stores text-based DNS information |
+| MX | Defines mail exchange servers |
+| NS | Identifies authoritative name servers |
+| PTR | Supports reverse DNS lookups |
+| SRV | Specifies service locations and connection details |
+| CAA | Defines certificate authority authorization policies |
+
+DNS record operations include:
+- Create, view, edit, and delete records.
+- Record-specific fields and validation.
+- Search by record attributes.
+- Filter records by DNS type.
+- Paginated record listings.
+- Confirmation dialogs for destructive actions.
+- Success notifications and error feedback.
+- Automatic record-count updates and relational consistency.
+
+### Route 53 console interface
+- AWS-inspired global navigation and service header.
+- Collapsible sidebar and nested navigation.
+- Breadcrumb-based navigation.
+- Resource tables with search and pagination controls.
+- Hosted zone details and record-management pages.
+- Structured forms, loading indicators, empty states, and error states.
+- Placeholder sections for Dashboard, Traffic Policies, Health Checks, Resolver, and Profiles.
+
+## Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | Next.js 14, React, TypeScript |
+| Styling and UI | React components, CSS, AWS-inspired design system |
+| Backend | Python, FastAPI |
+| API validation | Pydantic |
+| ORM | SQLAlchemy |
+| Database | SQLite |
+| Authentication | HTTP-only cookies and server-side sessions |
+| Testing | Pytest |
+| Frontend deployment | Vercel |
+| Backend deployment | AWS Lightsail |
+| Web server and HTTPS | Nginx, Let's Encrypt |
 
 ## Architecture
 
-```text
-Next.js frontend
-        ↓
-FastAPI HTTP API
-        ↓
-Service and repository layers
-        ↓
-SQLAlchemy models and sessions
-        ↓
-SQLite database
-```
-
-## Project structure
+The application follows a layered architecture that separates the user interface, API endpoints, business rules, and persistence operations.
 
 ```text
-frontend/
-  app/              Next.js routes and page components
-  components/       Auth, shell, notices, and shared UI
-  services/         Typed frontend API client
-  public/           AWS and Route53 assets
-backend/
-  app/api/          Authentication, hosted zone, and DNS record routes
-  app/core/         Configuration, security, and dependencies
-  app/database/     SQLAlchemy base, models, and sessions
-  app/repositories/ Database queries and persistence operations
-  app/services/     Business rules and ownership checks
-  app/schemas/      Pydantic request and response schemas
-  tests/            Backend API and validation tests
+                  User / Browser
+                        |
+                        v
+              Next.js + TypeScript
+                  Frontend UI
+                        |
+                        v
+                REST API Requests
+                        |
+                        v
+                 FastAPI Backend
+                        |
+             +----------+----------+
+             |                     |
+             v                     v
+      Authentication         API Routers
+                                   |
+                                   v
+                            Service Layer
+                         Business Validation
+                                   |
+                                   v
+                           Repository Layer
+                          Database Operations
+                                   |
+                                   v
+                         SQLAlchemy Models
+                                   |
+                                   v
+                              SQLite DB
 ```
 
-## Database schema
+### Frontend
 
-`hosted_zones` stores the zone name, public/private type, description, generated Route53-style zone ID, owner, timestamps, and denormalized record count.
+The Next.js application handles navigation, page rendering, form interactions, client-side state, authentication checks, and communication with the backend.
 
-`dns_records` stores the record name, type, TTL, value, structured MX/SRV/CAA fields, comments, timestamps, and its `hosted_zone_id` foreign key. A HostedZone has many DNSRecords. The relationship uses a foreign key with cascade delete and SQLAlchemy `delete-orphan` behavior, so deleting a zone does not leave orphaned records.
+A typed API client centralizes HTTP requests and supports cookie-based authentication.
 
-## API overview
+### Backend
 
-Authentication:
+FastAPI exposes REST endpoints for authentication, hosted zones, and DNS records. Request and response schemas provide structured validation, while service and repository layers separate business rules from database operations.
 
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
+### Database
 
-Hosted Zones:
+SQLite stores application resources locally on the backend server. SQLAlchemy provides ORM-based database access and relationship management.
 
-- `GET /api/hosted-zones`
-- `GET /api/hosted-zones/{id}`
-- `POST /api/hosted-zones`
-- `PUT /api/hosted-zones/{id}`
-- `DELETE /api/hosted-zones/{id}`
+For the deployed application, the database is located on the backend server's filesystem and is configured through the `DATABASE_URL` environment variable.
 
-DNS Records:
+## Project Structure
 
-- `GET /api/hosted-zones/{id}/records`
-- `GET /api/hosted-zones/{id}/records/{record_id}`
-- `POST /api/hosted-zones/{id}/records`
-- `PUT /api/hosted-zones/{id}/records/{record_id}`
-- `DELETE /api/hosted-zones/{id}/records/{record_id}`
+```text
+ScalerAI-submission-Akshat/
+│
+├── frontend/
+│   ├── app/
+│   │   ├── login/
+│   │   ├── hosted-zones/
+│   │   └── ...
+│   ├── components/
+│   ├── services/
+│   ├── public/
+│   ├── next.config.mjs
+│   ├── package.json
+│   └── .env.example
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── database/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   ├── schemas/
+│   │   └── main.py
+│   ├── tests/
+│   ├── data/
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── .gitignore
+└── README.md
+```
 
-The records list accepts `search`, `type`, `page`, and `page_size`. Hosted Zone lists accept `search`, `page`, and `page_size`. Interactive OpenAPI documentation is available at `/docs`.
+## Database Design
 
-## Setup and running
+The database is organized around two primary entities: `hosted_zones` and `dns_records`.
 
-Prerequisites: Python 3.11+ and Node.js/npm.
+### 1. Hosted Zones — `hosted_zones`
 
-Backend:
+Stores the metadata associated with each hosted zone.
+
+| Field | Description |
+|---|---|
+| ID | Primary key |
+| Name | Hosted zone name |
+| Type | Public or private |
+| Description | Optional resource description |
+| Zone ID | Generated Route 53-style identifier |
+| Owner | Resource ownership information |
+| Record count | Number of associated DNS records |
+| Created at | Resource creation timestamp |
+| Updated at | Most recent update timestamp |
+
+### 2. DNS Records — `dns_records`
+
+Stores the DNS records associated with each hosted zone.
+
+| Field | Description |
+|---|---|
+| ID | Primary key |
+| Hosted zone ID | Foreign key referencing `hosted_zones` |
+| Name | DNS record name |
+| Type | A, AAAA, CNAME, TXT, MX, NS, PTR, SRV, or CAA |
+| TTL | Time to live |
+| Value | Record value |
+| Structured fields | Type-specific MX, SRV, and CAA attributes |
+| Comment | Optional record description |
+| Created at | Resource creation timestamp |
+| Updated at | Most recent update timestamp |
+
+### Relationships and integrity
+
+- A hosted zone can contain multiple DNS records.
+- Each DNS record belongs to a hosted zone through a foreign key.
+- SQLAlchemy relationships maintain consistency between parent and child resources.
+- Cascade deletion removes associated records when a hosted zone is deleted.
+- Validation rules ensure that record fields conform to the selected DNS type.
+
+## REST API Reference
+
+The backend exposes a REST API under the `/api` prefix.
+
+### Authentication
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/login` | Authenticate a user |
+| GET | `/api/auth/me` | Retrieve the current session user |
+| POST | `/api/auth/logout` | End the current session |
+
+### Hosted Zones
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/hosted-zones` | List hosted zones |
+| GET | `/api/hosted-zones/{id}` | Retrieve a hosted zone |
+| POST | `/api/hosted-zones` | Create a hosted zone |
+| PUT | `/api/hosted-zones/{id}` | Update a hosted zone |
+| DELETE | `/api/hosted-zones/{id}` | Delete a hosted zone |
+
+Supported listing parameters include `search`, `page`, and `page_size`.
+
+### DNS Records
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/hosted-zones/{id}/records` | List records in a hosted zone |
+| GET | `/api/hosted-zones/{id}/records/{record_id}` | Retrieve a DNS record |
+| POST | `/api/hosted-zones/{id}/records` | Create a DNS record |
+| PUT | `/api/hosted-zones/{id}/records/{record_id}` | Update a DNS record |
+| DELETE | `/api/hosted-zones/{id}/records/{record_id}` | Delete a DNS record |
+
+The records listing supports `search`, `type`, `page`, and `page_size`.
+
+### API documentation
+
+FastAPI automatically provides interactive API documentation.
+
+- **Swagger UI:** `https://YOUR-BACKEND-HOST/docs`
+- **OpenAPI schema:** `https://YOUR-BACKEND-HOST/openapi.json`
+- **Health check:** `https://YOUR-BACKEND-HOST/health`
+
+Replace `YOUR-BACKEND-HOST` with the deployed backend hostname.
+
+## Getting Started
+
+### Prerequisites
+
+Install the following tools:
+
+- Python 3.11 or newer
+- Node.js and npm
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/AkshatBhatnagar29/ScalerAI-submission-Akshat.git
+cd ScalerAI-submission-Akshat
+```
+
+### 2. Configure the backend
+
+```bash
+cd backend
+python -m venv venv
+```
+
+Activate the virtual environment.
+
+**Windows PowerShell:**
 
 ```powershell
-cd backend
+.\venv\Scripts\Activate.ps1
+```
+
+**Linux or macOS:**
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 python -m pip install -r requirements.txt
+```
+
+Create the environment file from the example:
+
+**Windows PowerShell:**
+
+```powershell
 Copy-Item .env.example .env
+```
+
+**Linux or macOS:**
+
+```bash
+cp .env.example .env
+```
+
+Configure the required environment variables in `backend/.env`:
+
+```env
+MOCK_USERNAME=admin
+MOCK_PASSWORD=admin123
+FRONTEND_ORIGIN=http://localhost:3000
+COOKIE_SECURE=false
+COOKIE_SAMESITE=lax
+SESSION_SECRET=replace-with-a-long-random-secret
+DATABASE_URL=sqlite:///./data/route53.db
+```
+
+Use a unique secret for `SESSION_SECRET`. Keep `.env` files out of version control.
+
+Start the backend:
+
+```bash
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Frontend, in a second terminal:
+The backend will be available at `http://localhost:8000`.
 
-```powershell
+### 3. Configure the frontend
+
+Open a second terminal:
+
+```bash
 cd frontend
 npm install
+```
+
+Create the frontend environment file.
+
+**Windows PowerShell:**
+
+```powershell
 Copy-Item .env.example .env.local
+```
+
+**Linux or macOS:**
+
+```bash
+cp .env.example .env.local
+```
+
+For local development, leave `NEXT_PUBLIC_API_BASE_URL` empty and configure the server-side proxy target in `.env.local`:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=
+BACKEND_API_URL=http://127.0.0.1:8000
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
-Open <http://localhost:3000>. The backend health endpoint is <http://localhost:8000/health> and API docs are at <http://localhost:8000/docs>.
+Open [http://localhost:3000](http://localhost:3000).
 
-The backend creates the configured SQLite database directory automatically. SQLite is embedded; no SQLite server, AWS CLI, AWS SDK, Redis, PostgreSQL, Docker, or other service is required.
+### 4. Sign in
 
-### Environment variables
-
-Backend variables are documented in [backend/.env.example](backend/.env.example): `MOCK_USERNAME`, `MOCK_PASSWORD`, `FRONTEND_ORIGIN`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `SESSION_SECRET`, and `DATABASE_URL`.
-
-Frontend variables are documented in [frontend/.env.example](frontend/.env.example): `NEXT_PUBLIC_API_BASE_URL` and the server-side `BACKEND_API_URL` proxy target. Do not put secrets in `NEXT_PUBLIC_*` variables. Local `.env` files are intentionally ignored by Git.
-
-### Mock credentials
-
-Development-only mock credentials:
+Use the development credentials:
 
 ```text
 Username: admin
 Password: admin123
 ```
 
-## Running Backend
+You can then create a hosted zone and manage its DNS records through the interface.
 
-```powershell
-cd backend
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+## Configuration Reference
 
-## Running Frontend
+### Backend environment variables
 
-```powershell
-cd frontend
-npm run build
-npm run start
-```
+| Variable | Purpose |
+|---|---|
+| `MOCK_USERNAME` | Mock authentication username |
+| `MOCK_PASSWORD` | Mock authentication password |
+| `FRONTEND_ORIGIN` | Allowed frontend origin for CORS |
+| `COOKIE_SECURE` | Enables the Secure cookie attribute |
+| `COOKIE_SAMESITE` | Controls cookie SameSite behavior |
+| `SESSION_SECRET` | Secret used by the session/security configuration |
+| `DATABASE_URL` | SQLAlchemy database connection URL |
 
-Set `NEXT_PUBLIC_API_BASE_URL` to the deployed backend URL when the frontend and backend are hosted independently. For local development, leave it empty and set `BACKEND_API_URL` for the Next.js rewrite proxy.
+### Frontend environment variables
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | Optional browser-facing API base URL |
+| `BACKEND_API_URL` | Backend target for the Next.js `/api` rewrite proxy |
+
+When using the Next.js proxy, leave `NEXT_PUBLIC_API_BASE_URL` empty and set `BACKEND_API_URL` to the reachable backend URL.
+
+For production, configure environment variables in the relevant hosting provider's settings instead of committing local environment files.
 
 ## Testing
 
-Backend tests:
+### Backend tests
 
-```powershell
-cd backend
+From the backend directory, activate the Python environment and run:
+
+```bash
 pytest
 ```
 
-Frontend production build:
+The test suite covers the implemented API workflows, including authentication, hosted zone CRUD, search and pagination, DNS record operations, record-type validation, ownership checks, filtering, and cascade deletion.
 
-```powershell
-cd frontend
+### Frontend production build
+
+From the frontend directory:
+
+```bash
 npm run build
 ```
 
-The test suite covers authentication, protected routes, Hosted Zone CRUD/search/pagination, all required record types, type-specific validation, ownership isolation, filters, combined search and filter behavior, and cascade deletion.
+To run the production build locally:
 
-## Screenshots
-
-No screenshots are included in the repository, so none are documented here.
-
-## Limitations
-
-- DNS behavior and Route53 data are mocked; no real AWS Route53 API is used.
-- AWS IAM, accounts, regions, and permissions are mocked for the local experience.
-- Dashboard, Traffic Policies, Health Checks, Resolver, and Profiles are placeholder sections.
-- Sessions are held in the backend process memory and therefore are not intended for multi-process or production deployment.
-
-## Deployment Instructions
-
-These instructions are provider-neutral because no hosting provider is configured in this repository:
-
-1. Deploy the FastAPI backend with the production-like Uvicorn command above.
-2. Configure persistent storage for the SQLite database.
-3. Set backend environment variables, including `DATABASE_URL`, `FRONTEND_ORIGIN`, `COOKIE_SECURE`, and `COOKIE_SAMESITE`.
-4. Deploy the Next.js frontend with `npm run build` and `npm run start` or the provider’s equivalent.
-5. Set frontend `NEXT_PUBLIC_API_BASE_URL` to the backend URL.
-6. Set backend `FRONTEND_ORIGIN` to the exact frontend origin.
-7. Verify login, refresh, `/api/auth/me`, and logout.
-8. Verify Hosted Zone creation, editing, searching, pagination, and deletion.
-9. Verify DNS Record CRUD, search, filters, pagination, and ownership isolation.
-10. Restart the backend and verify that Hosted Zones and DNS Records still exist.
-
-IMPORTANT: SQLite must be stored on a persistent disk or volume in production. An ephemeral filesystem will not satisfy the persistence requirement.
-
-Deployment placeholders:
-
-```text
-Frontend URL: TODO — add deployed frontend URL
-Backend URL: TODO — add deployed backend URL
-Swagger URL: TODO — add deployed backend Swagger URL
+```bash
+npm run start
 ```
 
-## Deployment readiness
+### Manual verification checklist
 
-The frontend has a production build, the backend starts with configurable CORS and SQLite settings, and environment variables are documented. No hosted URL or automatic deployment is configured. Deployment is not complete until the manual hosting, persistent-volume, environment-variable, and hosted-demo verification steps above are performed.
+- [ ] Sign in and sign out.
+- [ ] Refresh the application and verify authentication behavior.
+- [ ] Create, edit, search, and delete hosted zones.
+- [ ] Open a hosted zone and manage its DNS records.
+- [ ] Test the supported DNS record types.
+- [ ] Verify record search, type filters, and pagination.
+- [ ] Confirm that deleting a hosted zone removes its associated records.
+- [ ] Restart the backend and verify that previously stored data remains available.
+- [ ] Verify the frontend production build and deployed API connectivity.
+
+## Deployment
+
+The application uses a separately hosted frontend and backend.
+
+### Frontend — Vercel
+
+Production demo:
+
+[https://scaler-ai-submission-akshat.vercel.app/](https://scaler-ai-submission-akshat.vercel.app/)
+
+The frontend can be deployed through the Vercel Git integration by importing the repository and setting the project root directory to `frontend`.
+
+Configure the frontend environment variables for the production deployment. When using the Next.js rewrite proxy, set `BACKEND_API_URL` to the public HTTPS backend URL and leave `NEXT_PUBLIC_API_BASE_URL` empty.
+
+### Backend — AWS Lightsail
+
+The FastAPI backend runs on an Ubuntu instance with Uvicorn managed by systemd and Nginx handling incoming web traffic and HTTPS.
+
+For deployment:
+
+1. Install Python and the backend dependencies.
+2. Configure the backend `.env` file.
+3. Configure Nginx to forward requests to the FastAPI application.
+4. Configure HTTPS and the frontend origin.
+5. Start and enable the backend systemd service.
+6. Configure a persistent location for the SQLite database.
+7. Verify the health endpoint, authentication, and resource APIs.
+
+The SQLite database path is controlled by `DATABASE_URL`. Keep the database on persistent storage and back it up before deployments or database migrations.
+
+### Production verification
+
+After deployment, verify:
+
+- The live frontend loads successfully.
+- The backend health endpoint returns a successful response.
+- Authentication works across page refreshes.
+- Hosted zones and DNS records can be created and retrieved.
+- Existing resources remain available after a backend restart.
+- HTTPS, cookies, CORS, and frontend-to-backend routing are configured correctly.
+
+## Design Principles
+
+The project emphasizes the following engineering principles:
+
+- **Separation of concerns:** API routes, business logic, data access, and frontend rendering are organized into distinct layers.
+- **Typed interfaces:** TypeScript and Pydantic provide structured contracts for application data.
+- **Data integrity:** Relational constraints and ORM relationships keep hosted zones and DNS records consistent.
+- **Reusable UI:** Shared components maintain consistent navigation, forms, tables, and notifications.
+- **Configuration-driven deployment:** Environment variables allow the application to run in local and hosted environments.
+- **Maintainability:** A modular project structure makes future functionality easier to extend.
+
+## Future Enhancements
+
+The architecture can be extended with additional Route 53-inspired capabilities, including:
+
+- BIND zone file import and export.
+- JSON resource export.
+- Bulk DNS record operations.
+- Keyboard shortcuts.
+- Theme preferences.
+- Additional DNS validation and resource-management workflows.
+
+## License
+
+This project was developed as a Route 53-inspired full-stack application. Add a `LICENSE` file if you intend to distribute the repository under a specific open-source license.
+
+---
+
+<p align="center">
+  <strong>AWS Route 53 Clone</strong>
+  <br />
+  Built with Next.js, TypeScript, FastAPI, and SQLite.
+  <br /><br />
+  <a href="https://scaler-ai-submission-akshat.vercel.app/">View Live Demo</a>
+</p>
